@@ -1,0 +1,43 @@
+version: '3.7'
+services:
+  track-me-api:
+    container_name: track-me-api
+    image: track-me-api-img
+    build:
+      context: ./
+    networks:
+      - track-me-api-net
+    ports:
+      - "7080:3000"
+    environment:
+      - NODE_ENV=prod
+      - DB_HOST=${PG_HOST}
+      - DB_PORT=${PG_PORT}
+      - DB_USER=${PG_USER}
+      - DB_PASS=${PG_PASS}
+      - DB_NAME=${PG_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      track-me-api-pg:
+        condition: service_healthy
+
+  track-me-api-pg:
+    container_name: track-me-api-pg
+    image: postgres:14
+    networks:
+      - track-me-api-net
+    ports:
+      - "7081:5432"
+    environment:
+      - POSTGRES_PASSWORD=${PG_PASS}
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_DB=support_lk_db
+    #      PG_DATA: /var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+networks:
+  track-me-api-net:
